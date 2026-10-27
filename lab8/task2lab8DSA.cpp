@@ -1,7 +1,5 @@
 #include <iostream>
-#include <vector>
 #include <iomanip>
-#include <algorithm>
 using namespace std;
 
 int dx[8] = {2, 1, -1, -2, -2, -1, 1, 2};
@@ -9,29 +7,40 @@ int dy[8] = {1, 2, 2, 1, -1, -2, -2, -1};
 
 long long calls = 0;
 
-bool inside(int x, int y, int n)
-{
+bool inside(int x, int y, int n) {
     return x >= 0 && y >= 0 && x < n && y < n;
 }
 
-void printBoard(const vector<vector<int>> &b)
-{
-    for (auto &row : b)
-    {
-        for (int v : row)
-            cout << setw(4) << v;
+int** newBoard(int n) {
+    int** b = new int*[n];
+    for (int i = 0; i < n; i++) {
+        b[i] = new int[n];
+        for (int j = 0; j < n; j++)
+            b[i][j] = 0;
+    }
+    return b;
+}
+
+void freeBoard(int** b, int n) {
+    for (int i = 0; i < n; i++)
+        delete[] b[i];
+    delete[] b;
+}
+
+void printBoard(int** b, int n) {
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++)
+            cout << setw(4) << b[i][j];
         cout << endl;
     }
 }
-bool backtrack(vector<vector<int>> &b, int x, int y, int step, int n)
-{
+bool backtrack(int** b, int x, int y, int step, int n) {
     calls++;
     b[x][y] = step;
     if (step == n * n)
         return true;
 
-    for (int k = 0; k < 8; k++)
-    {
+    for (int k = 0; k < 8; k++) {
         int nx = x + dx[k], ny = y + dy[k];
         if (inside(nx, ny, n) && b[nx][ny] == 0)
             if (backtrack(b, nx, ny, step + 1, n))
@@ -41,31 +50,25 @@ bool backtrack(vector<vector<int>> &b, int x, int y, int step, int n)
     return false;
 }
 
-int degree(const vector<vector<int>> &b, int x, int y, int n)
-{
+int degree(int** b, int x, int y, int n) {
     int count = 0;
-    for (int k = 0; k < 8; k++)
-    {
+    for (int k = 0; k < 8; k++) {
         int nx = x + dx[k], ny = y + dy[k];
         if (inside(nx, ny, n) && b[nx][ny] == 0)
             count++;
     }
     return count;
 }
-bool warnsdorff(vector<vector<int>> &b, int x, int y, int n)
-{
+
+bool warnsdorff(int** b, int x, int y, int n) {
     b[x][y] = 1;
-    for (int step = 2; step <= n * n; step++)
-    {
+    for (int step = 2; step <= n * n; step++) {
         int bestK = -1, bestDeg = 9;
-        for (int k = 0; k < 8; k++)
-        {
+        for (int k = 0; k < 8; k++) {
             int nx = x + dx[k], ny = y + dy[k];
-            if (inside(nx, ny, n) && b[nx][ny] == 0)
-            {
+            if (inside(nx, ny, n) && b[nx][ny] == 0) {
                 int d = degree(b, nx, ny, n);
-                if (d < bestDeg)
-                {
+                if (d < bestDeg) {
                     bestDeg = d;
                     bestK = k;
                 }
@@ -80,42 +83,35 @@ bool warnsdorff(vector<vector<int>> &b, int x, int y, int n)
     return true;
 }
 
-int main()
-{
+int main() {
     int n, sx, sy;
     cout << "Enter board size N: ";
     cin >> n;
     cout << "Enter starting position x y: ";
     cin >> sx >> sy;
 
-    if (!inside(sx, sy, n))
-    {
+    if (!inside(sx, sy, n)) {
         cout << "Starting position is outside the board" << endl;
         return 0;
     }
-
-    if (n <= 6)
-    {
-        cout << endl
-             << "Backtracking:" << endl;
-        vector<vector<int>> b1(n, vector<int>(n, 0));
-        if (backtrack(b1, sx, sy, 1, n))
-        {
-            printBoard(b1);
+    if (n <= 6) {
+        cout << endl << "Backtracking:" << endl;
+        int** b1 = newBoard(n);
+        if (backtrack(b1, sx, sy, 1, n)) {
+            printBoard(b1, n);
             cout << "Recursive calls made: " << calls << endl;
-        }
-        else
-        {
+        } else {
             cout << "No tour found" << endl;
         }
+        freeBoard(b1, n);
     }
 
-    cout << endl
-         << "Warnsdorff:" << endl;
-    vector<vector<int>> b2(n, vector<int>(n, 0));
+    cout << endl << "Warnsdorff:" << endl;
+    int** b2 = newBoard(n);
     if (warnsdorff(b2, sx, sy, n))
-        printBoard(b2);
+        printBoard(b2, n);
     else
         cout << "No tour found" << endl;
+    freeBoard(b2, n);
     return 0;
 }
